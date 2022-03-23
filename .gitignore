@@ -1,0 +1,7 @@
+.stamp.verilate
+build
+obj_dir
+transpad.png
+transpad.tcl
+waveform.vcd
+
