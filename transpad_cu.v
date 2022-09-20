@@ -17,6 +17,9 @@ module transpad_cu (
   output reg t1_addr_reg_rst,
   output reg t2_addr_reg_rst,
   output reg t3_addr_reg_rst,
+  output reg lst_addr_reg_rst,
+  output reg lst_addr_reg_we,
+  output reg lst_spad_reg_rst,
   output reg intlv_cnt_rst,
   output reg intlv_cnt_en,
   output reg loop_cnt_rst,
@@ -47,7 +50,7 @@ module transpad_cu (
     else
       case (cur_state)
         default:
-	  next_state = config_state;
+          next_state = config_state;
         config_state:
           if (start_req_ok)
             next_state = init_ofs_addr_state;
@@ -80,6 +83,9 @@ module transpad_cu (
     t1_addr_reg_rst  = 1;
     t2_addr_reg_rst  = 1;
     t3_addr_reg_rst  = 1;
+    lst_addr_reg_rst = 1;
+    lst_addr_reg_we  = 0;
+    lst_spad_reg_rst = 1;
     intlv_cnt_rst    = 1;
     intlv_cnt_en     = 0;
     loop_cnt_rst     = 1;
@@ -102,13 +108,18 @@ module transpad_cu (
         t1_addr_reg_rst  = 0;
         t2_addr_reg_rst  = 0;
         t3_addr_reg_rst  = 0;
+        lst_addr_reg_rst = 0;
+        lst_spad_reg_rst = 0;
         intlv_cnt_rst    = 0;
         loop_cnt_rst     = 0;
         oloop_cnt_rst    = 0;
         spaddr_cnt_rst   = 0;
       end
       config_state:
-	conf_dec_en      = 1;
+      begin
+        conf_dec_en      = 1;
+        lst_addr_reg_we  = 1;
+      end
       init_ofs_addr_state:
         ofs_addr_reg_we  = 1;
       load_tx_addr_state:
@@ -119,7 +130,7 @@ module transpad_cu (
       transl_state:
       begin
         tx_addr_sel      = 1;
-	act              = 1;
+        act              = 1;
       end
       upd_ofs_addr_state:
       begin
@@ -134,4 +145,3 @@ module transpad_cu (
     cur_state <= next_state;
 
 endmodule
-

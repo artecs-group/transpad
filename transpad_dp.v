@@ -9,6 +9,9 @@ module transpad_dp (
   input             t1_addr_reg_rst,
   input             t2_addr_reg_rst,
   input             t3_addr_reg_rst,
+  input             lst_addr_reg_rst,
+  input             lst_addr_reg_we,
+  input             lst_spad_reg_rst,
   input             intlv_cnt_rst,
   input             intlv_cnt_en,
   input             loop_cnt_rst,
@@ -27,7 +30,7 @@ module transpad_dp (
   output            intlv_end,
   output            loop_end,
   output            oloop_end,
-  output     [15:0] out,
+  output     [23:0] out,
   output            spm
   );
 
@@ -130,7 +133,7 @@ module transpad_dp (
   wire       t1_addr_reg_we = tx_addr_dec_out[0];
   wire       t2_addr_reg_we = tx_addr_dec_out[1];
   wire       t3_addr_reg_we = tx_addr_dec_out[2];
-  wire       tx_addr_dec_en_int = (spm || tx_addr_dec_en);
+  wire       tx_addr_dec_en_int = (ch_addr || tx_addr_dec_en);
   decoder4 tx_addr_dec(.en(tx_addr_dec_en_int),
                        .in(intlv_cnt_out),
                        .out(tx_addr_dec_out));
@@ -170,11 +173,29 @@ module transpad_dp (
                                  .in4(16'b0),
                                  .out(str_mux_out));
 
+  // lst_addr_reg signals
+  wire [47:0] lst_addr_reg_in = (lst_addr_reg_we ? st_addr : tgt_addr);
+  wire [47:0] lst_addr_reg_out;
+  wire        lst_addr_reg_we_int = (ch_addr || lst_addr_reg_we);
+  register #(.N(48)) lst_addr_reg(.clk(clk),
+                                  .rstn(lst_addr_reg_rst),
+                                  .we(lst_addr_reg_we_int),
+                                  .in(lst_addr_reg_in),
+                                  .out(lst_addr_reg_out));
+
+  // lst_spad_reg signals
+  wire [23:0] lst_spad_reg_out;
+  register #(.N(24)) lst_spad_reg(.clk(clk),
+                                  .rstn(lst_spad_reg_rst),
+                                  .we(ch_addr),
+                                  .in(spaddr_cnt_out),
+                                  .out(lst_spad_reg_out));
+
   // intlv_cnt signals
   wire [1:0] intlv_cnt_out;
   assign     intlv_end          = (mode[1:0] == intlv_cnt_out);
   wire       intlv_cnt_rst_int  = (intlv_cnt_rst && ~intlv_end);
-  wire       intlv_cnt_en_int   = (intlv_cnt_en  || spm);
+  wire       intlv_cnt_en_int   = (intlv_cnt_en  || ch_addr);
   counter  #(.N(2))  intlv_cnt(  .clk(clk),
                                  .rstn(intlv_cnt_rst_int),
                                  .en(intlv_cnt_en_int),
@@ -186,7 +207,7 @@ module transpad_dp (
   wire        loop_cnt_rst_int  = (loop_cnt_rst && ~loop_end);
   counter  #(.N(16)) loop_cnt(   .clk(clk),
                                  .rstn(loop_cnt_rst_int),
-                                 .en(spm),
+                                 .en(ch_addr),
                                  .out(loop_cnt_out));
 
   // oloop_cnt signals
@@ -199,10 +220,11 @@ module transpad_dp (
                                  .out(oloop_cnt_out));
 
   // spaddr_cnt signals
-  counter  #(.N(16)) spaddr_cnt( .clk(clk),
+  wire [23:0] spaddr_cnt_out;
+  counter  #(.N(24)) spaddr_cnt( .clk(clk),
                                  .rstn(spaddr_cnt_rst),
-                                 .en(spm),
-                                 .out(out));
+                                 .en(ch_addr),
+                                 .out(spaddr_cnt_out));
 
   // other signals
   wire   start_req    = (rdy && (cmd == 3'b111) && (data[7:0] == 8'b10100101));
@@ -211,7 +233,10 @@ module transpad_dp (
                         (mode[3:0] == 4'b1101) ||
                         (mode[3:0] == 4'b1110);
   assign start_req_ok = (start_req && valid_mode);
-  assign spm          = (rdy && (data == tgt_addr));
+  wire   tgt_found    = (data == tgt_addr);
+  wire   lst_found    = (data == lst_addr_reg_out);
+  wire   ch_addr      = (rdy && tgt_found);
+  assign spm          = (rdy && (tgt_found || lst_found));
+  assign out          = (lst_found ? lst_spad_reg_out : spaddr_cnt_out);
 
 endmodule
-

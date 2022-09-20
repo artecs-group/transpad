@@ -1,7 +1,8 @@
 .stamp.verilate
 build
 obj_dir
+.$transpad.drawio.bkp
+.$transpad.drawio.dtmp
 transpad.png
 transpad.tcl
 waveform.vcd
-

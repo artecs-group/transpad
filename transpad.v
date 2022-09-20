@@ -4,7 +4,7 @@ module transpad (
   input          rstn, // Reset (negative, synchronous)
   input          rdy,  // Ready
   input          clk,  // Clock
-  output [15:0]  out,  // Output
+  output [23:0]  out,  // Output
   output         act,  // Active
   output         spm   // SPM or Main Memory
   );
@@ -19,6 +19,9 @@ module transpad (
   wire t1_addr_reg_rst;
   wire t2_addr_reg_rst;
   wire t3_addr_reg_rst;
+  wire lst_addr_reg_rst;
+  wire lst_addr_reg_we;
+  wire lst_spad_reg_rst;
   wire intlv_cnt_rst;
   wire intlv_cnt_en;
   wire loop_cnt_rst;
@@ -41,4 +44,3 @@ module transpad (
   transpad_cu control_unit(.*);
 
 endmodule
-
