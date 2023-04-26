@@ -1,0 +1,19 @@
+name: sc_env
+channels:
+  - LiteX-Hub
+  - conda-forge
+  - anaconda
+dependencies:
+  - surelog
+  - openroad==2.0_7070_g0264023b6
+  - magic
+  - netgen
+  - yosys
+  - graphviz
+  - fmt
+  - libglvnd-glx-cos7-x86_64
+  - pip
+  - pip:
+    - siliconcompiler
+variables:
+  LD_LIBRARY_PATH: "'$LD_LIBRARY_PATH:$CONDA_PREFIX/x86_64-conda-linux-gnu/sysroot/usr/lib64'"
