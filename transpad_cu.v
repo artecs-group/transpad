@@ -42,7 +42,7 @@ module transpad_cu (
   reg [2:0] cur_state, next_state;
 
   // next state generation logic
-  always @(cur_state, rstn, start_req_ok, stop_req, loop_end, oloop_end)
+  always @(*)
   begin
     next_state = cur_state; // default case
     if (!rstn)
@@ -71,7 +71,7 @@ module transpad_cu (
   end
 
   // output generation logic
-  always @(cur_state)
+  always @(*)
   begin
     st_addr_reg_rst  = 1;
     sd2_ctrl_reg_rst = 1;
